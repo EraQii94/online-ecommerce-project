@@ -8,7 +8,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   standalone: true,
   selector: 'app-product-list',
-  imports: [CommonModule, RouterModule,NgbModule],
+  imports: [CommonModule, RouterModule, NgbModule],
   templateUrl: './product-list-grid.html',
   styleUrl: './product-list.css'
 })
@@ -18,10 +18,11 @@ export class ProductList implements OnInit {
   currentCategoryId: number = 1;
   previousCategoryId: number = 1;
   searchMode: boolean = true;
+  previousKeyWord = "";
 
   // prop. for pagination
   thePageNumber = 1;
-  thePageSize = 10;
+  thePageSize = 5;
   theTotalElements = 0;
 
   constructor(
@@ -54,13 +55,21 @@ export class ProductList implements OnInit {
 
   handleSearchProducts() {
     const theKeyword = this.route.snapshot.paramMap.get('keyword')!;
-    this.productservice.searchProduct(theKeyword).subscribe(
-      data => {
-        console.log("Search result:", data);
-        this.products = data;
-      }
-    )
+
+    //if the keyword changed in search 
+    //set the page number to 1
+
+    if (this.previousKeyWord != theKeyword) {
+      this.thePageNumber = 1;
+    }
+
+    this.previousKeyWord = theKeyword;
+
+
+    this.productservice.searchProductPagination(this.thePageNumber - 1, this.thePageSize, theKeyword).subscribe(this.processResult());
+
   }
+
 
   handleListProducts() {
     //check if id parameter is available
@@ -87,21 +96,26 @@ export class ProductList implements OnInit {
     this.productservice.getProductListPaginate(this.thePageNumber - 1,
       this.thePageSize,
       this.currentCategoryId)
-      .subscribe(
-        data => {
-          this.products = data._embedded.products;
-          this.thePageNumber = data.page.number + 1;
-          this.thePageSize = data.page.size;
-          this.theTotalElements = data.page.totalElements;
-        }
-      );
+      .subscribe(this.processResult());
 
 
   }
 
+  updatePageSize(pageSize: string) {
+    this.thePageSize = +pageSize;
+    this.thePageNumber = 1;
+    this.listProducts(); //to refresh page view
+  }
 
-
-
+  processResult(){
+    return (data:any) =>{
+      this.products = data._embedded.products;
+          this.thePageNumber = data.page.number + 1;
+          this.thePageSize = data.page.size;
+          this.theTotalElements = data.page.totalElements;
+    }
+  }
+  
 }
 
 

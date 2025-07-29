@@ -74,6 +74,17 @@ export class Productservice {
 
     return this.http.get<GetResponseProducts>(searchUrl);
   };
+
+  searchProductPagination(thePage: number,
+                          thepageSize: number,
+                          theKeyword: string): Observable<GetResponseProducts> {
+
+
+    const searchUrl = `${this.BaseUrl}/search/findByNameContaining?name=${theKeyword}`
+      + `&page=${thePage}&size=${thepageSize}`
+
+    return this.http.get<GetResponseProducts>(searchUrl);
+  };
 }
 
 interface GetResponseProducts {
